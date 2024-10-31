@@ -3,6 +3,8 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+from prognosis import calcular_pontuacao, obter_prognostico, obter_prognostico_humanizado
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 
@@ -157,7 +159,40 @@ def getAllUsers():
 
     return jsonify(allUsers), 200
 
+@app.route('/prognosis/<int:user_id>', methods=['GET'])
+def getUserPrognosis(user_id):
+    data = request.json
+    encefalopatia = data.get('encefalopatia')
+    ascite = data.get('ascite')
+    inr = data.get('inr')
+    bilirrubina = data.get('bilirrubina')
+    albumina = data.get('albumina')
 
+    classe, pontuacao = calcular_pontuacao(encefalopatia, ascite, inr, bilirrubina, albumina)
+    prognostico = obter_prognostico(classe, pontuacao)
+    prognostico_humanizado = obter_prognostico_humanizado(classe)
+
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+
+    new_prognosis = Prognosis(
+        class_=classe,
+        score=pontuacao,
+        one_year=prognostico['sobrevida_1_ano'],
+        two_years=prognostico['sobrevida_2_anos'],
+        perioperative_mortality=prognostico['mortalidade_perioperatoria'],
+        user_id=user_id,
+        comments=prognostico['recommendations']
+    )
+
+    db.session.add(new_prognosis)
+    db.session.commit()
+
+    return jsonify({
+        "prognostico": prognostico,
+        "prognostico_humanizado": prognostico_humanizado
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
