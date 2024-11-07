@@ -173,3 +173,33 @@ Exemplo de Resposta:
   }
 }
 ```
+
+## 5. Obter Prognóstico de um Usuário
+- Rota: /prognosis/<int:user_id>
+- Método: GET
+- Descrição: Calcula e retorna o prognóstico de um usuário específico, com base nos dados fornecidos no corpo da requisição. O prognóstico inclui a classe, pontuação, taxas de sobrevivência e outras informações relacionadas.
+
+Payload (JSON):
+```
+{
+  "encefalopatia": "None",
+  "ascite": "Moderate",
+  "inr": 1.4,
+  "bilirrubina": 2.3,
+  "albumina": 3.0
+}
+```
+Exemplo de Resposta:
+```
+{
+  "prognostico": {
+    "classe": "B",
+    "pontuacao": 8,
+    "sobrevida_1_ano": 85.0,
+    "sobrevida_2_anos": 75.0,
+    "mortalidade_perioperatoria": "Moderate",
+    "recommendations": "Monitor closely and adjust treatment."
+  },
+  "prognostico_humanizado": "Classe B: Risco moderado de mortalidade. Sobrevida estimada de 85% em 1 ano."
+}
+```
