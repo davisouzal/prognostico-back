@@ -89,7 +89,8 @@ def getUserAllData(user_id):
                 'perioperative_mortality': prognosis.perioperative_mortality,
                 'comments': prognosis.comments
             } for prognosis in user.prognosis
-        ]
+        ],
+        'humanized_prognosis': obter_prognostico_humanizado(user.prognosis[-1].class_)
     }
     
     return jsonify(userData)
@@ -132,7 +133,23 @@ def createUser():
         db.session.add(new_pathological_data)
         db.session.commit()
 
-        return jsonify({"message": "User and pathological data created successfully"}), 201
+        classe, pontuacao = calcular_pontuacao(pathological_data['encephalopathy'], pathological_data['ascites'], pathological_data['inr'], pathological_data['total_bilirubin'], pathological_data['albumin'])
+        prognostico = obter_prognostico(classe, pontuacao)
+
+        new_prognosis = Prognosis(
+            class_=classe,
+            score=pontuacao,
+            one_year=prognostico['sobrevida_1_ano'],
+            two_years=prognostico['sobrevida_2_anos'],
+            perioperative_mortality=prognostico['mortalidade_perioperatoria'],
+            user_id=new_user.id,
+            comments=prognostico['recommendations']
+        )
+
+        db.session.add(new_prognosis)
+        db.session.commit()
+
+        return jsonify({"message": "User, pathological and prognosis data created successfully"}), 201
 
     except Exception as e:
         db.session.rollback()
@@ -160,41 +177,6 @@ def getAllUsers():
         allUsers.append(userData)
 
     return jsonify(allUsers), 200
-
-@app.route('/prognosis/<int:user_id>', methods=['GET'])
-def getUserPrognosis(user_id):
-    data = request.json
-    encefalopatia = data.get('encefalopatia')
-    ascite = data.get('ascite')
-    inr = data.get('inr')
-    bilirrubina = data.get('bilirrubina')
-    albumina = data.get('albumina')
-
-    classe, pontuacao = calcular_pontuacao(encefalopatia, ascite, inr, bilirrubina, albumina)
-    prognostico = obter_prognostico(classe, pontuacao)
-    prognostico_humanizado = obter_prognostico_humanizado(classe)
-
-    user = User.query.get(user_id)
-    if user is None:
-        return jsonify({"error": "User not found"}), 404
-
-    new_prognosis = Prognosis(
-        class_=classe,
-        score=pontuacao,
-        one_year=prognostico['sobrevida_1_ano'],
-        two_years=prognostico['sobrevida_2_anos'],
-        perioperative_mortality=prognostico['mortalidade_perioperatoria'],
-        user_id=user_id,
-        comments=prognostico['recommendations']
-    )
-
-    db.session.add(new_prognosis)
-    db.session.commit()
-
-    return jsonify({
-        "prognostico": prognostico,
-        "prognostico_humanizado": prognostico_humanizado
-    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
