@@ -104,6 +104,8 @@ def createUser():
         birth_date_str = user_data['birthDate']
         birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
 
+        print(user_data)
+
         new_user = User(
             cpf=user_data['cpf'],
             name=user_data['name'],
@@ -115,10 +117,10 @@ def createUser():
             type=user_data['type']
         )
 
+
         db.session.add(new_user)
         db.session.commit()
 
-        print(new_user)
 
         new_pathological_data = PathologicalData(
             diff_diag=pathological_data['diff_diag'],
@@ -153,7 +155,7 @@ def createUser():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 500
     
 @app.route('/users', methods=['GET'])
 def getAllUsers():
@@ -177,6 +179,62 @@ def getAllUsers():
         allUsers.append(userData)
 
     return jsonify(allUsers), 200
+
+@app.route('/users/<int:user_id>', methods=['PUT'])
+def updateUser(user_id):
+    try:
+        user = User.query.get(user_id)
+
+        if user is None:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = request.json['user']
+        pathological_data = request.json['pathological_data']
+
+        birth_date_str = user_data['birthDate']
+        birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
+
+        user.cpf = user_data['cpf']
+        user.name = user_data['name']
+        user.email = user_data['email']
+        user.birthDate = birth_date
+        user.gender = user_data['gender']
+        user.status = user_data['status']
+        user.type = user_data['type']
+
+        db.session.commit()
+
+        user_pathological_data = PathologicalData.query.filter_by(user_id=user_id).first()
+        user_pathological_data.diff_diag = pathological_data['diff_diag']
+        user_pathological_data.encephalopathy = pathological_data['encephalopathy']
+        user_pathological_data.ascites = pathological_data['ascites']
+        user_pathological_data.inr = pathological_data['inr']
+        user_pathological_data.total_bilirubin = pathological_data['total_bilirubin']
+        user_pathological_data.albumin = pathological_data['albumin']
+
+        db.session.commit()
+
+        classe, pontuacao = calcular_pontuacao(pathological_data['encephalopathy'], pathological_data['ascites'], pathological_data['inr'], pathological_data['total_bilirubin'], pathological_data['albumin'])
+        prognostico = obter_prognostico(classe, pontuacao)
+
+        user_prognosis = Prognosis.query.filter_by(user_id=user_id).first()
+        user_prognosis.class_ = classe
+        user_prognosis.score = pontuacao
+
+        user_prognosis.one_year = prognostico['sobrevida_1_ano']
+        user_prognosis.two_years = prognostico['sobrevida_2_anos']
+        user_prognosis.perioperative_mortality = prognostico['mortalidade_perioperatoria']
+        user_prognosis.comments = prognostico['recommendations']
+
+        db.session.commit()
+
+        return jsonify({"message": "User, pathological and prognosis data updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+        
+
 
 if __name__ == '__main__':
     app.run(debug=True)
