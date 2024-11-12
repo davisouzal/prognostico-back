@@ -19,7 +19,7 @@ class User(db.Model):
     cpf = db.Column(db.String(45))
     name = db.Column(db.String(45))
     email = db.Column(db.String(45))
-    birthDate = db.Column(db.Date)
+    birthDate = db.Column(db.String(45))
     gender = db.Column(db.String(1))
     status = db.Column(db.Boolean)
     password = db.Column(db.String(45))
@@ -108,7 +108,7 @@ def createUser():
             cpf=data['cpf'],
             name=data['name'],
             email=data['email'],
-            birthDate=birth_date,
+            birthDate=data['birthDate'],
             gender=data['gender'],
             status=data['status'],
             password=data['password'],
@@ -189,13 +189,10 @@ def updateUser(user_id):
         data = request.json
         pathological_data = request.json['pathological_data']
 
-        birth_date_str = data['birthDate']
-        birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
-
         user.cpf = data['cpf']
         user.name = data['name']
         user.email = data['email']
-        user.birthDate = birth_date
+        user.birthDate = data['birthDate']
         user.gender = data['gender']
         user.status = data['status']
         user.type = data['type']
@@ -229,10 +226,7 @@ def updateUser(user_id):
         return jsonify({"message": "User, pathological and prognosis data updated successfully"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 400
-
-        
-
-
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
