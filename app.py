@@ -22,7 +22,6 @@ class User(db.Model):
     birthDate = db.Column(db.String(45))
     gender = db.Column(db.String(1))
     status = db.Column(db.Boolean)
-    password = db.Column(db.String(45))
     type = db.Column(db.String(45))
     
     pathological_data = db.relationship('PathologicalData', backref='user', lazy=True)
@@ -111,7 +110,6 @@ def createUser():
             birthDate=data['birthDate'],
             gender=data['gender'],
             status=data['status'],
-            password=data['password'],
             type=data['type']
         )
 
