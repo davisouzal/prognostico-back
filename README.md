@@ -142,16 +142,14 @@ Isso iniciará o servidor Flask em modo de desenvolvimento na porta `5000`. Aces
 
 ```
 {
-  "user": {
-    "cpf": "123456789",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "birthDate": "1980-01-01",
-    "gender": "M",
-    "status": true,
-    "password": "password123",
-    "type": "admin",
-  }
+  "cpf": "123456789",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "birthDate": "1980-01-01",
+  "gender": "M",
+  "status": true,
+  "password": "password123",
+  "type": "admin",
   "pathological_data": {
     "diff_diag": "Condition A",
     "encephalopathy": "None",
@@ -164,15 +162,36 @@ Isso iniciará o servidor Flask em modo de desenvolvimento na porta `5000`. Aces
 Exemplo de Resposta:
 {
   "message": "User created successfully",
-  "user": {
-    "id": 1,
-    "cpf": "123456789",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "birthDate": "1980-01-01",
-    "gender": "M",
-    "status": true,
-    "type": "admin"
+}
+```
+
+## 5. Atualizar Usuário, Dados Patológicos e Prognóstico
+ - Rota: /user/<int:user_id>
+ - Método: POST
+ - Descrição: Atualiza os dados de um usuário com seus dados patológicos e seu prognóstico.
+- Exemplo de Payload (JSON):
+
+```
+{
+  "cpf": "123456789",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "birthDate": "1980-01-01",
+  "gender": "M",
+  "status": true,
+  "password": "password123",
+  "type": "admin",
+  "pathological_data": {
+    "diff_diag": "Condition A",
+    "encephalopathy": "None",
+    "ascites": "Mild",
+    "inr": 1.2,
+    "total_bilirubin": 1.5,
+    "albumin": 3.4
   }
+}
+Exemplo de Resposta:
+{
+  "message": "User created successfully",
 }
 ```

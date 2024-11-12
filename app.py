@@ -98,23 +98,21 @@ def getUserAllData(user_id):
 @app.route('/users', methods=['POST'])
 def createUser():
     try:
-        user_data = request.json['user']
+        data = request.json
         pathological_data = request.json['pathological_data']
 
-        birth_date_str = user_data['birthDate']
+        birth_date_str = data['birthDate']
         birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
-
-        print(user_data)
-
+        
         new_user = User(
-            cpf=user_data['cpf'],
-            name=user_data['name'],
-            email=user_data['email'],
+            cpf=data['cpf'],
+            name=data['name'],
+            email=data['email'],
             birthDate=birth_date,
-            gender=user_data['gender'],
-            status=user_data['status'],
-            password=user_data['password'],
-            type=user_data['type']
+            gender=data['gender'],
+            status=data['status'],
+            password=data['password'],
+            type=data['type']
         )
 
 
@@ -188,19 +186,19 @@ def updateUser(user_id):
         if user is None:
             return jsonify({"error": "User not found"}), 404
 
-        user_data = request.json['user']
+        data = request.json
         pathological_data = request.json['pathological_data']
 
-        birth_date_str = user_data['birthDate']
+        birth_date_str = data['birthDate']
         birth_date = datetime.strptime(birth_date_str, '%Y-%m-%d').date()
 
-        user.cpf = user_data['cpf']
-        user.name = user_data['name']
-        user.email = user_data['email']
+        user.cpf = data['cpf']
+        user.name = data['name']
+        user.email = data['email']
         user.birthDate = birth_date
-        user.gender = user_data['gender']
-        user.status = user_data['status']
-        user.type = user_data['type']
+        user.gender = data['gender']
+        user.status = data['status']
+        user.type = data['type']
 
         db.session.commit()
 
